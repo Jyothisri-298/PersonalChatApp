@@ -1,0 +1,196 @@
+<html>
+<head>
+	<title>
+	     Chat App
+	</title>
+	<style type="text/css">
+	#chat
+	{
+		height: 70%;
+		overflow-y: scroll;
+		word-wrap: break-word;
+		background: #fff;
+		padding: 10px;
+		margin: 0 auto;
+		list-style-type: none;
+	}
+	.senderText
+	{
+		background: #a6acba;
+		border: 4px solid transparent;
+		border-radius: 4px;
+		padding: 5px;
+		margin-bottom: 2px;
+		color: #fff;
+		text-align: right;
+	}
+	.receiverText
+	{
+		background: #76a0be;
+		border: 4px solid transparent;
+		border-radius: 4px;
+		margin-bottom: 2px;
+		padding: 5px;
+		color: #fff;
+		text-align: left;
+	}
+	#contentwrap
+	{
+		padding-top: 5%;
+		width: 85%;
+		display: none;
+		float: center;	
+	}
+	#chatwrap
+	{
+		float:right;
+        width:70%;
+        overflow:hidden;
+		border-radius: 5px 5px 5px 5px;
+	}
+	#nickwrap
+	{
+		width: 500px;
+		height: 150px;
+		background-color: grey;
+		border-radius: 25px;
+		border: 2px solid grey;
+		position: absolute;
+		top:0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		margin: auto;
+	}
+	#nickname{
+		border-radius: 25px;
+		padding:5px;
+		border: 2px solid grey;
+		text-align: center;
+	}
+	#setnick{
+	    text-align: center;
+	}
+	#users{
+         padding-left: 5%;
+		 float:left;
+         width:25%;
+         overflow:hidden;
+    }
+	#message{
+		width:84%;
+		border-radius: 25px;
+		padding:5px;
+		border: 1px solid grey;
+	}
+	#sendmessage{
+		float: right;
+		width: 100%;
+	}
+	#nicknameerror
+	{
+		text-align: center;
+		font-weight: bold;
+	}
+	#submit{
+		border-radius: 25px;
+		padding:5px;
+		width:15%;
+		border: 1px solid grey;
+	}
+	
+	</style>
+</head>
+<body style="background: radial-gradient(#3733b8bf,transparent);">
+	<div id="nickwrap" >
+		<p id="nicknameerror"></p>
+		<form id="setnick">
+			<input type="text" id="nickname" placeholder="Enter username" autocomplete="off"/><br><br>
+			<button id="submit" type="submit">connect</button>  
+		</form>
+	</div>
+	<div id="contentwrap">
+		<div>
+			<h4 style="margin-bottom: 5px; width: 20%; color:rgb(49, 177, 117)">CONNECTED USERS</h4>
+			<ul id="users"></ul>
+		</div>
+		<div id="chatwrap">
+			<ul id="chat" class="clearfix"></ul>
+			<form id="sendmessage" >
+				<input type="text" id="message" autocomplete="off"/>
+				<button id="submit" type="submit">send</button>
+			</form>
+		</div>
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		$(function(){
+			var socket=io.connect();
+			var $nickform=$('#setnick');
+			var $nickerror=$('#nicknameerror');
+			var $nickbox=$('#nickname');
+			var $messageform=$('#sendmessage');
+			var $messageip=$('#message');
+			var $chat=$('#chat');
+			var $users=$('#users');
+			var ran=document.getElementById('nickname');
+			$nickform.submit(function(e){
+				e.preventDefault();
+				if($nickbox.val()=='' || $nickbox.val()==" "||ran.value.indexOf(' ') >= 0)
+				{
+					alert("not allowed");
+					return false;
+                }
+				socket.emit('new user',$nickbox.val(),function(data){
+					if(data == "exists"){
+						$nickerror.html('Username already exists ...!  Try again!');
+					}
+					else if(data == false){
+						$nickerror.html('Already two clients connected ...!  Try again!');
+					}
+					else {
+						$('#nickwrap').fadeOut();
+						$('#contentwrap').fadeIn();
+					}
+
+				});
+				$currentUser = $nickbox.val();
+				$nickbox.val('');
+			});
+			$messageform.submit(function(e){
+				
+				e.preventDefault();
+				
+				socket.emit('sendmessage',$messageip.val(),function(data){
+					$chat.append('<span class="error"><b>'+data+"</span><Br>");		
+				});
+                //To clear the input field after sending the msg
+				$messageip.val("");
+
+			});
+			//To append the username and msg into the chat box.
+			socket.on('newmessage',function(data){
+				if(data.nick === $currentUser){
+                    colorClass = "senderText";
+                } else{
+                    colorClass = "receiverText";
+                }
+				$chat.append('<li class="'+colorClass+'"><b>'+data.nick+': </b>'+data.msg+"</li>");
+				$chat.stop().animate({
+					scrollTop: $chat[0].scrollHeight
+					}, 800);
+            });
+            //To display the users 
+			socket.on('usernames',function(data){
+				var str=' ';
+				for(var i=0;i<data.length;i++)
+				{
+					str+="<li>"+data[i]+'</li>';
+				}
+				$users.html(str);
+			});
+		});
+	</script>
+</body>
+</html>

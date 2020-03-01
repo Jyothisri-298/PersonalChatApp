@@ -1,0 +1,17 @@
+{
+  "name": "chat_application",
+  "version": "1.0.0",
+  "description": "Creating peer to peer chat application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jyothi sri",
+  "license": "ISC",
+  "dependencies": {
+    "cluster": "^0.7.7",
+    "express": "^4.17.1",
+    "net": "^1.0.2",
+    "socket.io": "^2.3.0"
+  }
+}
